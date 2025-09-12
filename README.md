@@ -322,5 +322,5 @@ For support, email support@example.com or create an issue in the repository.
 - Rate limiting
 - Comprehensive testing
 - Accessibility features
-#   B U Y E R - A p p  
+#   B U Y E R - A p p 
  

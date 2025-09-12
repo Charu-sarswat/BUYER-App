@@ -1,0 +1,6 @@
+fullName,email,phone,city,propertyType,bhk,purpose,budgetMin,budgetMax,timeline,source,notes,tags,status
+John Doe,john.doe@example.com,9876543210,Chandigarh,Apartment,2,Buy,5000000,8000000,0-3m,Website,Looking for 2BHK in Chandigarh,"premium,urgent",New
+Jane Smith,jane.smith@example.com,9876543211,Mohali,Villa,3,Buy,10000000,15000000,3-6m,Referral,Investment property in Mohali,"investment,villa",New
+Mike Johnson,mike.johnson@example.com,9876543212,Zirakpur,Plot,,Buy,2000000,5000000,>6m,Walk-in,Looking for plot in Zirakpur,"plot,investment",New
+Sarah Wilson,sarah.wilson@example.com,9876543213,Panchkula,Apartment,1,Rent,30000,50000,Exploring,Call,First time renter,"rent,apartment",New
+David Brown,david.brown@example.com,9876543214,Other,Office,,Buy,4000000,7000000,>6m,Referral,Commercial property,"commercial,office",New
