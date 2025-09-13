@@ -115,7 +115,7 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
         updatedAt: data.updatedAt, // Ensure updatedAt is included
         timeline: data.timeline === 'ZERO_TO_THREE_MONTHS' ? '0-3m' :
                   data.timeline === 'THREE_TO_SIX_MONTHS' ? '3-6m' :
-                  data.timeline === 'MORE_THAN_SIX_MONTHS' ? '>6m' :
+                  data.timeline === 'MORE_THAN_SIX_MONTHS' ? '&gt;6m' :
                   data.timeline === 'Exploring' ? 'Exploring' :
                   data.timeline,
         bhk: data.bhk === 'ONE' ? '1' :
@@ -506,7 +506,7 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
                         <SelectContent>
                           <SelectItem value="0-3m">0-3 months</SelectItem>
                           <SelectItem value="3-6m">3-6 months</SelectItem>
-                          <SelectItem value=">6m">>6 months</SelectItem>
+                          <SelectItem value=">6m">&gt;6 months</SelectItem>
                           <SelectItem value="Exploring">Exploring</SelectItem>
                         </SelectContent>
                       </Select>

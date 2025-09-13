@@ -128,7 +128,7 @@ export function SignInForm() {
 
           <div className="text-center pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/auth/signup" className="text-primary hover:underline font-medium">
                 Create one here
               </Link>
