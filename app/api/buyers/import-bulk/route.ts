@@ -54,10 +54,23 @@ export async function POST(request: NextRequest) {
       errors: parseResult.errors?.length || 0
     })
 
-    if (!parseResult.success || !parseResult.data) {
+    if (!parseResult.success) {
       console.log('CSV validation failed:', parseResult.errors)
       return NextResponse.json({
         error: 'CSV validation failed',
+        details: parseResult.errors,
+        summary: {
+          totalRows: parseResult.totalRows,
+          validRows: parseResult.validRows,
+          invalidRows: parseResult.invalidRows,
+        }
+      }, { status: 400 })
+    }
+
+    // If no valid data, return validation errors
+    if (!parseResult.data || parseResult.data.length === 0) {
+      return NextResponse.json({
+        error: 'No valid rows to import',
         details: parseResult.errors,
         summary: {
           totalRows: parseResult.totalRows,
@@ -80,29 +93,43 @@ export async function POST(request: NextRequest) {
       ownerId: session.user.id,
     }))
 
-    console.log(`Starting bulk import of ${buyersData.length} buyers...`)
+    console.log(`Starting bulk import of ${buyersData.length} valid buyers...`)
     const startTime = Date.now()
 
-    // Use createMany for maximum performance - this is the fastest way
-    const createResult = await prisma.buyer.createMany({
-      data: buyersData,
-      skipDuplicates: true, // Skip duplicates if any
+    // Use transaction to ensure data consistency
+    const result = await prisma.$transaction(async (tx) => {
+      // Use createMany for maximum performance
+      const createResult = await tx.buyer.createMany({
+        data: buyersData,
+        skipDuplicates: true, // Skip duplicates if any
+      })
+
+      return createResult
     })
 
     const endTime = Date.now()
     const duration = endTime - startTime
 
-    console.log(`Bulk import completed in ${duration}ms. Created ${createResult.count} buyers.`)
+    console.log(`Bulk import completed in ${duration}ms. Created ${result.count} buyers.`)
 
-    // Return minimal response for better performance
+    // Return detailed response
     return NextResponse.json({
       message: 'Bulk import successful',
-      imported: createResult.count,
-      totalRows: parseResult.data.length,
-      skipped: parseResult.data.length - createResult.count,
+      imported: result.count,
+      totalRows: parseResult.totalRows,
+      validRows: parseResult.validRows,
+      invalidRows: parseResult.invalidRows,
+      skipped: parseResult.validRows - result.count,
       duration: `${duration}ms`,
       performance: {
-        rowsPerSecond: Math.round((createResult.count / duration) * 1000)
+        rowsPerSecond: Math.round((result.count / duration) * 1000)
+      },
+      summary: {
+        totalRows: parseResult.totalRows,
+        validRows: parseResult.validRows,
+        invalidRows: parseResult.invalidRows,
+        imported: result.count,
+        skipped: parseResult.validRows - result.count
       }
     })
   } catch (error) {

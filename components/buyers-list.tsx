@@ -51,6 +51,10 @@ export function BuyersList() {
   const [pagination, setPagination] = useState<Pagination | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<any[]>([])
+  const [importSummary, setImportSummary] = useState<any>(null)
   
   // Filters
   const [search, setSearch] = useState(searchParams.get('search') || '')
@@ -117,6 +121,9 @@ export function BuyersList() {
 
   const handleExport = async () => {
     try {
+      setError(null)
+      setSuccess(null)
+      
       const params = new URLSearchParams({
         ...(search && { search }),
         ...(city && city !== 'all' && { city }),
@@ -140,6 +147,17 @@ export function BuyersList() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
+
+      // Show success message
+      const filterCount = [search, city !== 'all' ? city : null, propertyType !== 'all' ? propertyType : null, status !== 'all' ? status : null, timeline !== 'all' ? timeline : null].filter(Boolean).length
+      const successMessage = `✅ CSV exported successfully! ${filterCount > 0 ? `(Filtered by ${filterCount} criteria)` : '(All buyers)'}`
+      setSuccess(successMessage)
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null)
+      }, 3000)
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Export failed')
     }
@@ -157,6 +175,12 @@ export function BuyersList() {
       formData.append('file', file)
 
       try {
+        setError(null)
+        setSuccess(null)
+        setValidationErrors([])
+        setImportSummary(null)
+        setImporting(true)
+        
         // Use the optimized bulk import endpoint for better performance
         const response = await fetch('/api/buyers/import-bulk', {
           method: 'POST',
@@ -164,17 +188,44 @@ export function BuyersList() {
         })
 
         if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error || 'Import failed')
+          const errorData = await response.json()
+          
+          // Handle validation errors with detailed display
+          if (errorData.details && Array.isArray(errorData.details)) {
+            setError(`CSV validation failed. Please fix the errors below and try again.`)
+            setValidationErrors(errorData.details)
+            setImportSummary(errorData.summary)
+            return
+          }
+          
+          throw new Error(errorData.error || 'Import failed')
         }
 
         const result = await response.json()
         console.log('Import result:', result)
 
+        // Show success message with details
+        const successMessage = `✅ Successfully imported ${result.imported} buyers! ${
+          result.skipped > 0 ? `(${result.skipped} duplicates skipped)` : ''
+        } ${
+          result.duration ? `Completed in ${result.duration}` : ''
+        }`
+        
+        setSuccess(successMessage)
+
         // Refresh the list
         fetchBuyers()
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+          setSuccess(null)
+        }, 5000)
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Import failed')
+        setSuccess(null)
+      } finally {
+        setImporting(false)
       }
     }
     input.click()
@@ -212,9 +263,9 @@ export function BuyersList() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button onClick={handleImport} variant="outline" size="sm">
+          <Button onClick={handleImport} variant="outline" size="sm" disabled={importing}>
             <Upload className="h-4 w-4 mr-2" />
-            Import CSV
+            {importing ? 'Importing...' : 'Import CSV'}
           </Button>
           <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
@@ -231,6 +282,64 @@ export function BuyersList() {
         <Card className="border-destructive">
           <CardContent className="pt-6">
             <p className="text-destructive">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {success && (
+        <Card className="border-green-500 bg-green-50">
+          <CardContent className="pt-6">
+            <p className="text-green-700 font-medium">{success}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {importing && (
+        <Card className="border-blue-500 bg-blue-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <p className="text-blue-700 font-medium">Importing buyers... Please wait.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {validationErrors.length > 0 && (
+        <Card className="border-orange-500 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="text-orange-800">CSV Validation Errors</CardTitle>
+            {importSummary && (
+              <CardDescription className="text-orange-700">
+                Total Rows: {importSummary.totalRows} | Valid: {importSummary.validRows} | Invalid: {importSummary.invalidRows}
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Row #</TableHead>
+                    <TableHead>Errors</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {validationErrors.map((error, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{error.row}</TableCell>
+                      <TableCell>
+                        <ul className="list-disc list-inside space-y-1">
+                          {error.errors.map((err: string, errIndex: number) => (
+                            <li key={errIndex} className="text-sm text-red-600">{err}</li>
+                          ))}
+                        </ul>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
