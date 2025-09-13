@@ -86,20 +86,32 @@ export const CreateBuyerFormSchema = BaseBuyerSchema.refine(
 )
 
 // API schema with transform for database storage
-export const CreateBuyerSchema = CreateBuyerFormSchema.transform((data) => ({
-  ...data,
-  // Transform assignment values to Prisma enum values
-  timeline: data.timeline === '0-3m' ? 'ZERO_TO_THREE_MONTHS' :
-            data.timeline === '3-6m' ? 'THREE_TO_SIX_MONTHS' :
-            data.timeline === '>6m' ? 'MORE_THAN_SIX_MONTHS' :
-            data.timeline,
-  bhk: data.bhk === '1' ? 'ONE' :
-       data.bhk === '2' ? 'TWO' :
-       data.bhk === '3' ? 'THREE' :
-       data.bhk === '4' ? 'FOUR' :
-       data.bhk,
-  source: data.source === 'Walk-in' ? 'Walk_in' : data.source,
-}))
+export const CreateBuyerSchema = CreateBuyerFormSchema.transform((data) => {
+  const transformed: any = { ...data }
+  
+  // Transform timeline values to Prisma enum values
+  transformed.timeline = data.timeline === '0-3m' ? 'ZERO_TO_THREE_MONTHS' :
+                        data.timeline === '3-6m' ? 'THREE_TO_SIX_MONTHS' :
+                        data.timeline === '>6m' ? 'MORE_THAN_SIX_MONTHS' :
+                        data.timeline
+  
+  // Transform BHK values to Prisma enum values
+  if (data.bhk) {
+    transformed.bhk = data.bhk === '1' ? 'ONE' :
+                     data.bhk === '2' ? 'TWO' :
+                     data.bhk === '3' ? 'THREE' :
+                     data.bhk === '4' ? 'FOUR' :
+                     data.bhk === 'Studio' ? 'Studio' :
+                     data.bhk
+  }
+  
+  // Transform source values to Prisma enum values
+  if (data.source) {
+    transformed.source = data.source === 'Walk-in' ? 'Walk_in' : data.source
+  }
+  
+  return transformed
+})
 
 // Update buyer form schema (for client-side validation)
 export const UpdateBuyerFormSchema = z.object({
@@ -122,21 +134,38 @@ export const UpdateBuyerFormSchema = z.object({
 })
 
 // Update buyer API schema (with transform for database storage)
-export const UpdateBuyerSchema = UpdateBuyerFormSchema.transform((data) => ({
-  ...data,
-  // Transform assignment values to Prisma enum values
-  timeline: data.timeline === '0-3m' ? 'ZERO_TO_THREE_MONTHS' :
-            data.timeline === '3-6m' ? 'THREE_TO_SIX_MONTHS' :
-            data.timeline === '>6m' ? 'MORE_THAN_SIX_MONTHS' :
-            data.timeline,
-  bhk: data.bhk === '1' ? 'ONE' :
-       data.bhk === '2' ? 'TWO' :
-       data.bhk === '3' ? 'THREE' :
-       data.bhk === '4' ? 'FOUR' :
-       data.bhk,
-  source: data.source === 'Walk-in' ? 'Walk_in' : data.source,
-  status: data.status, // Status enum values are already correct in database
-})).refine(
+export const UpdateBuyerSchema = UpdateBuyerFormSchema.transform((data) => {
+  const transformed: any = { ...data }
+  
+  // Transform timeline values to Prisma enum values
+  if (data.timeline) {
+    transformed.timeline = data.timeline === '0-3m' ? 'ZERO_TO_THREE_MONTHS' :
+                          data.timeline === '3-6m' ? 'THREE_TO_SIX_MONTHS' :
+                          data.timeline === '>6m' ? 'MORE_THAN_SIX_MONTHS' :
+                          data.timeline
+  }
+  
+  // Transform BHK values to Prisma enum values
+  if (data.bhk !== undefined) {
+    transformed.bhk = data.bhk === '1' ? 'ONE' :
+                     data.bhk === '2' ? 'TWO' :
+                     data.bhk === '3' ? 'THREE' :
+                     data.bhk === '4' ? 'FOUR' :
+                     data.bhk === 'Studio' ? 'Studio' :
+                     data.bhk
+  }
+  
+  // Transform source values to Prisma enum values
+  if (data.source) {
+    transformed.source = data.source === 'Walk-in' ? 'Walk_in' : data.source
+  }
+  
+  // Remove fields that shouldn't be in the database update
+  delete transformed.id
+  delete transformed.updatedAt
+  
+  return transformed
+}).refine(
   (data) => {
     if (data.propertyType === 'Apartment' || data.propertyType === 'Villa') {
       return data.bhk !== undefined
