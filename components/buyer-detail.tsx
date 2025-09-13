@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -91,7 +91,7 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
   const source = watch('source')
   const status = watch('status')
 
-  const fetchBuyer = async () => {
+  const fetchBuyer = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -135,11 +135,11 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [buyerId, reset])
 
   useEffect(() => {
     fetchBuyer()
-  }, [buyerId])
+  }, [fetchBuyer])
 
 
   const onSubmit = async (data: UpdateBuyerFormInput) => {
@@ -254,7 +254,35 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
               <Button
                 onClick={() => {
                   setEditing(false)
-                  reset(buyer)
+                  // Transform buyer data to match form schema
+                  const formData = {
+                    id: buyer.id,
+                    updatedAt: buyer.updatedAt,
+                    fullName: buyer.fullName,
+                    email: buyer.email,
+                    phone: buyer.phone,
+                    city: buyer.city as any,
+                    propertyType: buyer.propertyType as any,
+                    bhk: (buyer.bhk === 1 ? '1' :
+                         buyer.bhk === 2 ? '2' :
+                         buyer.bhk === 3 ? '3' :
+                         buyer.bhk === 4 ? '4' :
+                         buyer.bhk === 0 ? 'Studio' :
+                         null) as any,
+                    purpose: buyer.purpose as any,
+                    budgetMin: buyer.budgetMin,
+                    budgetMax: buyer.budgetMax,
+                    timeline: (buyer.timeline === 'ZERO_TO_THREE_MONTHS' ? '0-3m' :
+                              buyer.timeline === 'THREE_TO_SIX_MONTHS' ? '3-6m' :
+                              buyer.timeline === 'MORE_THAN_SIX_MONTHS' ? '&gt;6m' :
+                              buyer.timeline === 'Exploring' ? 'Exploring' :
+                              buyer.timeline) as any,
+                    source: (buyer.source === 'Walk_in' ? 'Walk-in' : buyer.source) as any,
+                    notes: buyer.notes,
+                    tags: buyer.tags || '',
+                    status: buyer.status as any,
+                  }
+                  reset(formData)
                 }}
                 variant="outline"
                 size="sm"

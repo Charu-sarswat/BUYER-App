@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -40,7 +40,7 @@ export function BuyerHistory({ buyerId }: BuyerHistoryProps) {
   const [page, setPage] = useState(1)
   const [fieldFilter, setFieldFilter] = useState<string>('all')
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -65,11 +65,11 @@ export function BuyerHistory({ buyerId }: BuyerHistoryProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [buyerId, page, fieldFilter])
 
   useEffect(() => {
     fetchHistory()
-  }, [buyerId, page, fieldFilter])
+  }, [fetchHistory])
 
   const fieldOptions = [
     { value: 'all', label: 'All Fields' },

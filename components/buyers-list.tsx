@@ -305,7 +305,7 @@ export function BuyersList() {
                 <SelectItem value="all">All Timelines</SelectItem>
                 <SelectItem value="ZERO_TO_THREE_MONTHS">0-3 months</SelectItem>
                 <SelectItem value="THREE_TO_SIX_MONTHS">3-6 months</SelectItem>
-                <SelectItem value="MORE_THAN_SIX_MONTHS">>6 months</SelectItem>
+                <SelectItem value="MORE_THAN_SIX_MONTHS">&gt;6 months</SelectItem>
                 <SelectItem value="Exploring">Exploring</SelectItem>
               </SelectContent>
             </Select>

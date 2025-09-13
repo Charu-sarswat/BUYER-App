@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Buyer } from '@prisma/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,11 +27,7 @@ export function MyBuyersList({ userId }: MyBuyersListProps) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [cityFilter, setCityFilter] = useState('all')
 
-  useEffect(() => {
-    fetchMyBuyers()
-  }, [userId])
-
-  const fetchMyBuyers = async () => {
+  const fetchMyBuyers = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/buyers/my-buyers?userId=${userId}`)
@@ -47,7 +43,11 @@ export function MyBuyersList({ userId }: MyBuyersListProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    fetchMyBuyers()
+  }, [fetchMyBuyers])
 
   const filteredBuyers = buyers.filter(buyer => {
     const matchesSearch = buyer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -85,7 +85,7 @@ export function MyBuyersList({ userId }: MyBuyersListProps) {
   }
 
   if (error) {
-    return <ErrorMessage message={error} />
+    return <ErrorMessage error={error} />
   }
 
   if (buyers.length === 0) {
@@ -93,14 +93,8 @@ export function MyBuyersList({ userId }: MyBuyersListProps) {
       <EmptyState
         title="No buyers yet"
         description="You haven't added any buyer leads yet. Start by adding your first buyer."
-        action={
-          <Link href="/buyers/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add First Buyer
-            </Button>
-          </Link>
-        }
+        actionLabel="Add First Buyer"
+        onAction={() => window.location.href = '/buyers/new'}
       />
     )
   }

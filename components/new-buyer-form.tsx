@@ -81,7 +81,7 @@ export function NewBuyerForm() {
             Buyer Information
           </CardTitle>
           <CardDescription>
-            Enter the buyer's details below. All required fields are marked with an asterisk (*).
+            Enter the buyer&apos;s details below. All required fields are marked with an asterisk (*).
           </CardDescription>
         </CardHeader>
         <CardContent>
