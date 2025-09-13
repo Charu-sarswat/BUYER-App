@@ -1,6 +1,6 @@
 fullName,email,phone,city,propertyType,bhk,purpose,budgetMin,budgetMax,timeline,source,notes,tags
-John Doe,john.doe@example.com,+91-9876543210,Mumbai,APARTMENT,2,END_USE,5000000,8000000,IMMEDIATE,Website,Looking for 2BHK in Mumbai,premium
-Jane Smith,jane.smith@example.com,+91-9876543211,Delhi,VILLA,3,INVESTMENT,10000000,15000000,THREE_TO_SIX,Referral,Investment property in Delhi,investment
-Mike Johnson,mike.johnson@example.com,+91-9876543212,Bangalore,PLOT,,BOTH,2000000,5000000,SIX_TO_TWELVE,Advertisement,Looking for plot in Bangalore,plot
-Sarah Wilson,sarah.wilson@example.com,+91-9876543213,Chennai,APARTMENT,1,END_USE,3000000,5000000,ZERO_TO_THREE,Website,First time buyer,first-time
-David Brown,david.brown@example.com,+91-9876543214,Hyderabad,OTHER,,INVESTMENT,4000000,7000000,MORE_THAN_TWELVE,Referral,Commercial property,commercial
+John Doe,john.doe@example.com,9876543210,Chandigarh,Apartment,2,Buy,5000000,8000000,0-3m,Website,Looking for 2BHK in Chandigarh,premium
+Jane Smith,jane.smith@example.com,9876543211,Mohali,Villa,3,Buy,10000000,15000000,3-6m,Referral,Investment property in Mohali,investment
+Mike Johnson,mike.johnson@example.com,9876543212,Zirakpur,Plot,,Buy,2000000,5000000,>6m,Walk-in,Looking for plot in Zirakpur,plot
+Sarah Wilson,sarah.wilson@example.com,9876543213,Panchkula,Apartment,1,Buy,3000000,5000000,0-3m,Website,First time buyer,first-time
+David Brown,david.brown@example.com,9876543214,Other,Office,,Rent,4000000,7000000,Exploring,Referral,Commercial property,commercial

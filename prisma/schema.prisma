@@ -104,6 +104,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
+  password      String?   // Hashed password for credentials authentication
   emailVerified DateTime?
   image         String?
   role          UserRole  @default(USER)
@@ -134,7 +135,7 @@ model Buyer {
   budgetMin    Int?         // INR
   budgetMax    Int?         // INR
   timeline     Timeline
-  source       Source
+  source       Source?
   notes        String?
   tags         String?      // JSON array of strings
   status       BuyerStatus  @default(New)

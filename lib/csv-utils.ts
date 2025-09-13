@@ -141,9 +141,45 @@ export function generateCsvContent(data: any[]): string {
 
   for (const row of data) {
     const values = headers.map(header => {
-      const value = row[header]
+      let value = row[header]
       if (value === null || value === undefined) {
         return ''
+      }
+      
+      // Transform database enum values back to CSV format
+      if (header === 'bhk') {
+        switch (value) {
+          case 'ONE': value = '1'; break
+          case 'TWO': value = '2'; break
+          case 'THREE': value = '3'; break
+          case 'FOUR': value = '4'; break
+          case 'Studio': value = 'Studio'; break
+          default: value = String(value)
+        }
+      } else if (header === 'timeline') {
+        switch (value) {
+          case 'ZERO_TO_THREE_MONTHS': value = '0-3m'; break
+          case 'THREE_TO_SIX_MONTHS': value = '3-6m'; break
+          case 'MORE_THAN_SIX_MONTHS': value = '>6m'; break
+          case 'Exploring': value = 'Exploring'; break
+          default: value = String(value)
+        }
+      } else if (header === 'source') {
+        switch (value) {
+          case 'Walk_in': value = 'Walk-in'; break
+          default: value = String(value)
+        }
+      } else if (header === 'status') {
+        switch (value) {
+          case 'New': value = 'New'; break
+          case 'Contacted': value = 'Contacted'; break
+          case 'Qualified': value = 'Qualified'; break
+          case 'Visited': value = 'Visited'; break
+          case 'Negotiation': value = 'Negotiation'; break
+          case 'Converted': value = 'Converted'; break
+          case 'Dropped': value = 'Dropped'; break
+          default: value = String(value)
+        }
       }
       
       // Escape quotes and wrap in quotes if contains comma, quote, or newline

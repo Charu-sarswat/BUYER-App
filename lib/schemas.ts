@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
-// Enums matching assignment requirements (CSV format)
+// Enums matching database values
 export const PropertyTypeEnum = z.enum(['Apartment', 'Villa', 'Plot', 'Office', 'Retail'])
 export const PurposeEnum = z.enum(['Buy', 'Rent'])
-export const TimelineEnum = z.enum(['0-3m', '3-6m', '>6m', 'Exploring'])
+export const TimelineEnum = z.enum(['ZERO_TO_THREE_MONTHS', 'THREE_TO_SIX_MONTHS', 'MORE_THAN_SIX_MONTHS', 'Exploring'])
 export const BuyerStatusEnum = z.enum(['New', 'Qualified', 'Contacted', 'Visited', 'Negotiation', 'Converted', 'Dropped'])
 export const CityEnum = z.enum(['Chandigarh', 'Mohali', 'Zirakpur', 'Panchkula', 'Other'])
-export const SourceEnum = z.enum(['Website', 'Referral', 'Walk-in', 'Call', 'Other'])
-export const BHKEnum = z.enum(['1', '2', '3', '4', 'Studio'])
+export const SourceEnum = z.enum(['Website', 'Referral', 'Walk_in', 'Call', 'Other'])
+export const BHKEnum = z.enum(['ONE', 'TWO', 'THREE', 'FOUR', 'Studio'])
 
 // Transform functions to convert CSV values to Prisma enum values
 export const transformTimeline = z.enum(['0-3m', '3-6m', '>6m', 'Exploring']).transform((val) => {
@@ -38,21 +38,26 @@ export const transformSource = z.enum(['Website', 'Referral', 'Walk-in', 'Call',
   }
 })
 
-// Base buyer schema for form submission (raw assignment values)
+// Form enums (user-friendly values)
+export const FormTimelineEnum = z.enum(['0-3m', '3-6m', '>6m', 'Exploring'])
+export const FormBHKEnum = z.enum(['1', '2', '3', '4', 'Studio'])
+export const FormSourceEnum = z.enum(['Website', 'Referral', 'Walk-in', 'Call', 'Other'])
+
+// Base buyer schema for form submission (user-friendly values)
 const BaseBuyerSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters').max(80, 'Full name must be at most 80 characters'),
-  email: z.string().email('Invalid email address').optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(15, 'Phone must be at most 15 digits'),
   city: CityEnum,
   propertyType: PropertyTypeEnum,
-  bhk: BHKEnum.optional(),
+  bhk: FormBHKEnum.optional(),
   purpose: PurposeEnum,
   budgetMin: z.number().positive().optional(),
   budgetMax: z.number().positive().optional(),
-  timeline: TimelineEnum,
-  source: SourceEnum,
+  timeline: FormTimelineEnum,
+  source: FormSourceEnum.optional(),
   notes: z.string().max(1000, 'Notes must be less than 1000 characters').optional(),
-  tags: z.string().optional(),
+  tags: z.string().optional().or(z.literal('')).nullable(),
 })
 
 // Form schema for client-side validation (no transform)
@@ -97,11 +102,41 @@ export const CreateBuyerSchema = CreateBuyerFormSchema.transform((data) => ({
 }))
 
 // Update buyer form schema (for client-side validation)
-export const UpdateBuyerFormSchema = BaseBuyerSchema.partial().extend({
+export const UpdateBuyerFormSchema = z.object({
   id: z.string().cuid().optional(),
   updatedAt: z.string().datetime().optional(),
+  fullName: z.string().min(2, 'Full name must be at least 2 characters').max(80, 'Full name must be at most 80 characters').optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  phone: z.string().min(10, 'Phone must be at least 10 digits').max(15, 'Phone must be at most 15 digits').optional(),
+  city: CityEnum.optional(),
+  propertyType: PropertyTypeEnum.optional(),
+  bhk: FormBHKEnum.optional().nullable(),
+  purpose: PurposeEnum.optional(),
+  budgetMin: z.number().positive().optional(),
+  budgetMax: z.number().positive().optional(),
+  timeline: FormTimelineEnum.optional(),
+  source: FormSourceEnum.optional(),
+  notes: z.string().max(1000, 'Notes must be less than 1000 characters').optional(),
+  tags: z.string().optional().or(z.literal('')).nullable(),
   status: BuyerStatusEnum.optional(),
-}).refine(
+})
+
+// Update buyer API schema (with transform for database storage)
+export const UpdateBuyerSchema = UpdateBuyerFormSchema.transform((data) => ({
+  ...data,
+  // Transform assignment values to Prisma enum values
+  timeline: data.timeline === '0-3m' ? 'ZERO_TO_THREE_MONTHS' :
+            data.timeline === '3-6m' ? 'THREE_TO_SIX_MONTHS' :
+            data.timeline === '>6m' ? 'MORE_THAN_SIX_MONTHS' :
+            data.timeline,
+  bhk: data.bhk === '1' ? 'ONE' :
+       data.bhk === '2' ? 'TWO' :
+       data.bhk === '3' ? 'THREE' :
+       data.bhk === '4' ? 'FOUR' :
+       data.bhk,
+  source: data.source === 'Walk-in' ? 'Walk_in' : data.source,
+  status: data.status, // Status enum values are already correct in database
+})).refine(
   (data) => {
     if (data.propertyType === 'Apartment' || data.propertyType === 'Villa') {
       return data.bhk !== undefined
@@ -125,34 +160,10 @@ export const UpdateBuyerFormSchema = BaseBuyerSchema.partial().extend({
   }
 )
 
-// Update buyer API schema (with transform for database storage)
-export const UpdateBuyerSchema = UpdateBuyerFormSchema.transform((data) => ({
-  ...data,
-  // Transform assignment values to Prisma enum values
-  timeline: data.timeline === '0-3m' ? 'ZERO_TO_THREE_MONTHS' :
-            data.timeline === '3-6m' ? 'THREE_TO_SIX_MONTHS' :
-            data.timeline === '>6m' ? 'MORE_THAN_SIX_MONTHS' :
-            data.timeline,
-  bhk: data.bhk === '1' ? 'ONE' :
-       data.bhk === '2' ? 'TWO' :
-       data.bhk === '3' ? 'THREE' :
-       data.bhk === '4' ? 'FOUR' :
-       data.bhk,
-  source: data.source === 'Walk-in' ? 'Walk_in' : data.source,
-  status: data.status === 'New' ? 'NEW' :
-          data.status === 'Contacted' ? 'CONTACTED' :
-          data.status === 'Qualified' ? 'QUALIFIED' :
-          data.status === 'Visited' ? 'VISITED' :
-          data.status === 'Negotiation' ? 'NEGOTIATION' :
-          data.status === 'Converted' ? 'CONVERTED' :
-          data.status === 'Dropped' ? 'DROPPED' :
-          data.status,
-}))
-
 // CSV row schema for import validation (with transforms)
 export const CsvRowSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters').max(80, 'Full name must be at most 80 characters'),
-  email: z.string().email('Invalid email address').optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(15, 'Phone must be at most 15 digits'),
   city: CityEnum,
   propertyType: PropertyTypeEnum,
@@ -172,7 +183,7 @@ export const CsvRowSchema = z.object({
     return isNaN(num) ? undefined : num
   }),
   timeline: transformTimeline,
-  source: transformSource,
+  source: transformSource.optional(),
   notes: z.string().max(1000, 'Notes must be at most 1000 characters').optional(),
   tags: z.string().optional(),
   status: BuyerStatusEnum.optional(),
@@ -200,7 +211,7 @@ export const CsvRowSchema = z.object({
   }
 )
 
-// Query parameters schema for buyers list
+// Query parameters schema for buyers list (uses database enum values)
 export const BuyersQuerySchema = z.object({
   page: z.string().optional().transform((val) => {
     const num = parseInt(val || '1', 10)
@@ -211,7 +222,7 @@ export const BuyersQuerySchema = z.object({
     return isNaN(num) || num < 1 || num > 100 ? 10 : num
   }),
   search: z.string().optional(),
-  city: z.string().optional(),
+  city: CityEnum.optional(),
   propertyType: PropertyTypeEnum.optional(),
   status: BuyerStatusEnum.optional(),
   timeline: TimelineEnum.optional(),

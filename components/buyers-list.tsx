@@ -197,24 +197,26 @@ export function BuyersList() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Buyers</h1>
-          <p className="text-muted-foreground">
-            Manage your buyer leads
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            Buyer Leads
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Manage and track your buyer leads efficiently
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleImport} variant="outline">
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={handleImport} variant="outline" size="sm">
             <Upload className="h-4 w-4 mr-2" />
             Import CSV
           </Button>
-          <Button onClick={handleExport} variant="outline">
+          <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
-          <Button onClick={() => router.push('/buyers/new')}>
+          <Button onClick={() => router.push('/buyers/new')} size="sm">
             <Plus className="h-4 w-4 mr-2" />
             New Buyer
           </Button>
@@ -229,11 +231,14 @@ export function BuyersList() {
         </Card>
       )}
 
-      <Card>
+      <Card className="animate-slide-up">
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-primary" />
+            Filters & Search
+          </CardTitle>
           <CardDescription>
-            Filter and search through your buyers
+            Filter and search through your buyer leads
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -254,13 +259,11 @@ export function BuyersList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Cities</SelectItem>
-                <SelectItem value="Mumbai">Mumbai</SelectItem>
-                <SelectItem value="Delhi">Delhi</SelectItem>
-                <SelectItem value="Bangalore">Bangalore</SelectItem>
-                <SelectItem value="Chennai">Chennai</SelectItem>
-                <SelectItem value="Hyderabad">Hyderabad</SelectItem>
-                <SelectItem value="Pune">Pune</SelectItem>
-                <SelectItem value="Kolkata">Kolkata</SelectItem>
+                <SelectItem value="Chandigarh">Chandigarh</SelectItem>
+                <SelectItem value="Mohali">Mohali</SelectItem>
+                <SelectItem value="Zirakpur">Zirakpur</SelectItem>
+                <SelectItem value="Panchkula">Panchkula</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
 
@@ -300,29 +303,34 @@ export function BuyersList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Timelines</SelectItem>
-                <SelectItem value="0-3m">0-3 months</SelectItem>
-                <SelectItem value="3-6m">3-6 months</SelectItem>
-                <SelectItem value=">6m">>6 months</SelectItem>
+                <SelectItem value="ZERO_TO_THREE_MONTHS">0-3 months</SelectItem>
+                <SelectItem value="THREE_TO_SIX_MONTHS">3-6 months</SelectItem>
+                <SelectItem value="MORE_THAN_SIX_MONTHS">>6 months</SelectItem>
                 <SelectItem value="Exploring">Exploring</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button onClick={clearFilters} variant="outline">
+            <Button onClick={clearFilters} variant="outline" className="hover:bg-muted">
               Clear Filters
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="animate-scale-in">
         <CardContent className="p-0">
           {buyers.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No buyers found</p>
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                <Search className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No buyers found</h3>
+              <p className="text-muted-foreground mb-6">Get started by creating your first buyer lead</p>
               <Button 
                 onClick={() => router.push('/buyers/new')} 
-                className="mt-4"
+                size="lg"
               >
+                <Plus className="h-4 w-4 mr-2" />
                 Create your first buyer
               </Button>
             </div>
@@ -368,14 +376,15 @@ export function BuyersList() {
                     </TableCell>
                     <TableCell>{formatTimeline(buyer.timeline)}</TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        buyer.status === 'NEW' ? 'bg-blue-100 text-blue-800' :
-                        buyer.status === 'CONTACTED' ? 'bg-yellow-100 text-yellow-800' :
-                        buyer.status === 'QUALIFIED' ? 'bg-green-100 text-green-800' :
-                        buyer.status === 'PROPOSAL_SENT' ? 'bg-purple-100 text-purple-800' :
-                        buyer.status === 'NEGOTIATING' ? 'bg-orange-100 text-orange-800' :
-                        buyer.status === 'CLOSED_WON' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+                        buyer.status === 'New' ? 'status-new' :
+                        buyer.status === 'Contacted' ? 'status-contacted' :
+                        buyer.status === 'Qualified' ? 'status-qualified' :
+                        buyer.status === 'Visited' ? 'status-visited' :
+                        buyer.status === 'Negotiation' ? 'status-negotiation' :
+                        buyer.status === 'Converted' ? 'status-converted' :
+                        buyer.status === 'Dropped' ? 'status-dropped' :
+                        'bg-gray-50 text-gray-700 border-gray-200'
                       }`}>
                         {formatStatus(buyer.status)}
                       </span>
@@ -388,8 +397,9 @@ export function BuyersList() {
                         variant="outline"
                         size="sm"
                         onClick={() => router.push(`/buyers/${buyer.id}`)}
+                        className="hover:bg-primary hover:text-primary-foreground transition-all duration-200"
                       >
-                        View
+                        View Details
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { UpdateBuyerFormSchema, type UpdateBuyerFormInput } from '@/lib/schemas'
 import { formatCurrency, formatDate, formatPropertyType, formatTimeline, formatPurpose, formatStatus } from '@/lib/utils'
 import { Loader2, Edit, Save, X, Trash2 } from 'lucide-react'
+import { BuyerHistory } from './buyer-history'
 
 interface Buyer {
   id: string
@@ -66,9 +67,11 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
     watch,
     setValue,
     reset,
+    trigger,
     formState: { errors, isValid, isDirty, isSubmitting },
   } = useForm<UpdateBuyerFormInput>({
     resolver: zodResolver(UpdateBuyerFormSchema),
+    mode: 'all', // Validate on change, blur, and submit
     defaultValues: {
       id: '',
       updatedAt: '',
@@ -105,7 +108,7 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
       const data = await response.json()
       setBuyer(data)
       
-      // Transform Prisma enum values to assignment values for the form
+      // Transform Prisma enum values to form values for the form
       const formData = {
         ...data,
         id: data.id, // Ensure id is included
@@ -113,21 +116,17 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
         timeline: data.timeline === 'ZERO_TO_THREE_MONTHS' ? '0-3m' :
                   data.timeline === 'THREE_TO_SIX_MONTHS' ? '3-6m' :
                   data.timeline === 'MORE_THAN_SIX_MONTHS' ? '>6m' :
+                  data.timeline === 'Exploring' ? 'Exploring' :
                   data.timeline,
         bhk: data.bhk === 'ONE' ? '1' :
              data.bhk === 'TWO' ? '2' :
              data.bhk === 'THREE' ? '3' :
              data.bhk === 'FOUR' ? '4' :
-             data.bhk,
+             data.bhk === 'Studio' ? 'Studio' :
+             data.bhk || null, // Keep null values as null
         source: data.source === 'Walk_in' ? 'Walk-in' : data.source,
-        status: data.status === 'NEW' ? 'New' :
-                data.status === 'CONTACTED' ? 'Contacted' :
-                data.status === 'QUALIFIED' ? 'Qualified' :
-                data.status === 'VISITED' ? 'Visited' :
-                data.status === 'NEGOTIATION' ? 'Negotiation' :
-                data.status === 'CONVERTED' ? 'Converted' :
-                data.status === 'DROPPED' ? 'Dropped' :
-                data.status,
+        status: data.status, // Status enum values are already correct
+        tags: data.tags || '', // Convert null to empty string
       }
       
       reset(formData)
@@ -142,10 +141,8 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
     fetchBuyer()
   }, [buyerId])
 
+
   const onSubmit = async (data: UpdateBuyerFormInput) => {
-    console.log('🚀 onSubmit called!')
-    console.log('📊 Form data:', JSON.stringify(data, null, 2))
-    console.log('🔍 Buyer exists:', !!buyer)
     if (!buyer) return
 
     try {
@@ -230,31 +227,29 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{buyer.fullName}</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            {buyer.fullName}
+          </h1>
+          <p className="text-muted-foreground text-lg">
             Created {formatDate(buyer.createdAt)} • Last updated {formatDate(buyer.updatedAt)}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-3">
           {editing ? (
             <>
               <Button
-                type="submit"
+                type="button"
                 disabled={saving}
                 size="sm"
-                onClick={(e) => {
-                  console.log('🔘 Save button clicked!')
-                  console.log('🔘 Button disabled?', saving)
-                  console.log('🔘 Form errors:', errors)
-                  console.log('🔘 Form valid?', isValid)
-                }}
+                onClick={handleSubmit(onSubmit)}
+                className="hover:shadow-lg"
               >
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Save className="mr-2 h-4 w-4" />
-                Save
+                Save Changes
               </Button>
               <Button
                 onClick={() => {
@@ -274,15 +269,17 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
                 onClick={() => setEditing(true)}
                 variant="outline"
                 size="sm"
+                className="hover:bg-primary hover:text-primary-foreground"
               >
                 <Edit className="mr-2 h-4 w-4" />
-                Edit
+                Edit Details
               </Button>
               <Button
                 onClick={handleDelete}
                 variant="destructive"
                 size="sm"
                 disabled={saving}
+                className="hover:shadow-lg hover:shadow-destructive/25"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -293,30 +290,29 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
       </div>
 
       {error && (
-        <Card className="border-destructive">
+        <Card className="border-destructive animate-scale-in">
           <CardContent className="pt-6">
-            <p className="text-destructive">{error}</p>
+            <p className="text-destructive font-medium">{error}</p>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="animate-slide-up">
             <CardHeader>
-              <CardTitle>Buyer Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+                  <span className="text-primary font-bold text-sm">👤</span>
+                </div>
+                Buyer Information
+              </CardTitle>
               <CardDescription>
                 {editing ? 'Edit the buyer details below' : 'View buyer details'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={(e) => {
-                console.log('📝 Form submit event triggered!')
-                console.log('📋 Form state:', { errors, isValid, isDirty, isSubmitting })
-                e.preventDefault()
-                console.log('🔄 Calling handleSubmit...')
-                handleSubmit(onSubmit)(e)
-              }} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Hidden fields for form validation */}
                 <input type="hidden" {...register('id')} />
                 <input type="hidden" {...register('updatedAt')} />
@@ -385,12 +381,21 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
                     {editing ? (
-                      <Input
-                        id="city"
-                        {...register('city')}
-                        aria-invalid={errors.city ? 'true' : 'false'}
-                        aria-describedby={errors.city ? 'city-error' : undefined}
-                      />
+                      <Select
+                        value={watch('city') || ''}
+                        onValueChange={(value) => setValue('city', value as any)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select city" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Chandigarh">Chandigarh</SelectItem>
+                          <SelectItem value="Mohali">Mohali</SelectItem>
+                          <SelectItem value="Zirakpur">Zirakpur</SelectItem>
+                          <SelectItem value="Panchkula">Panchkula</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <p className="text-sm">{buyer.city}</p>
                     )}
@@ -615,13 +620,18 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="animate-scale-in">
             <CardHeader>
-              <CardTitle>Status</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-success/20 to-success/10 rounded-lg flex items-center justify-center">
+                  <span className="text-success font-bold text-sm">📊</span>
+                </div>
+                Status
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label>Current Status</Label>
+                <Label className="text-sm font-medium">Current Status</Label>
                 {editing ? (
                   <Select
                     value={status || ''}
@@ -641,14 +651,15 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    buyer.status === 'New' ? 'bg-blue-100 text-blue-800' :
-                    buyer.status === 'Contacted' ? 'bg-yellow-100 text-yellow-800' :
-                    buyer.status === 'Qualified' ? 'bg-green-100 text-green-800' :
-                    buyer.status === 'Visited' ? 'bg-purple-100 text-purple-800' :
-                    buyer.status === 'Negotiation' ? 'bg-orange-100 text-orange-800' :
-                    buyer.status === 'Converted' ? 'bg-green-100 text-green-800' :
-                    'bg-red-100 text-red-800'
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+                    buyer.status === 'New' ? 'status-new' :
+                    buyer.status === 'Contacted' ? 'status-contacted' :
+                    buyer.status === 'Qualified' ? 'status-qualified' :
+                    buyer.status === 'Visited' ? 'status-visited' :
+                    buyer.status === 'Negotiation' ? 'status-negotiation' :
+                    buyer.status === 'Converted' ? 'status-converted' :
+                    buyer.status === 'Dropped' ? 'status-dropped' :
+                    'bg-gray-50 text-gray-700 border-gray-200'
                   }`}>
                     {formatStatus(buyer.status)}
                   </span>
@@ -657,9 +668,14 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="animate-scale-in">
             <CardHeader>
-              <CardTitle>Owner</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-info/20 to-info/10 rounded-lg flex items-center justify-center">
+                  <span className="text-info font-bold text-sm">👨‍💼</span>
+                </div>
+                Owner
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -670,9 +686,14 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
           </Card>
 
           {buyer.history.length > 0 && (
-            <Card>
+            <Card className="animate-scale-in">
               <CardHeader>
-                <CardTitle>Recent Changes</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-warning/20 to-warning/10 rounded-lg flex items-center justify-center">
+                    <span className="text-warning font-bold text-sm">📝</span>
+                  </div>
+                  Recent Changes
+                </CardTitle>
                 <CardDescription>
                   Last 5 changes to this buyer
                 </CardDescription>
@@ -702,6 +723,9 @@ export function BuyerDetail({ buyerId }: BuyerDetailProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* Full History Component */}
+          <BuyerHistory buyerId={buyerId} />
         </div>
       </div>
     </div>

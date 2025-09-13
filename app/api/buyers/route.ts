@@ -29,11 +29,17 @@ export async function GET(request: NextRequest) {
     const where: any = {}
     
     if (search) {
+      // For enum fields, we need to check if the search term matches any enum value
+      const cityValues = ['Chandigarh', 'Mohali', 'Zirakpur', 'Panchkula', 'Other']
+      const matchingCities = cityValues.filter(city => 
+        city.toLowerCase().includes(search.toLowerCase())
+      )
+      
       where.OR = [
         { fullName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
-        { city: { contains: search, mode: 'insensitive' } },
+        ...(matchingCities.length > 0 ? [{ city: { in: matchingCities } }] : []),
       ]
     }
     
