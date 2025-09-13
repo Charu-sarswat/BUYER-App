@@ -4,15 +4,15 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Starting database migration...')
+    console.log('Starting database setup...')
     
-    // Run Prisma migrations
-    execSync('npx prisma migrate deploy', { 
+    // Use prisma db push instead of migrate deploy for serverless
+    execSync('npx prisma db push', { 
       stdio: 'inherit',
       env: { ...process.env }
     })
     
-    console.log('Migrations completed successfully')
+    console.log('Database schema pushed successfully')
     
     // Test database connection
     await prisma.$connect()
@@ -26,17 +26,17 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ 
       success: true, 
-      message: 'Database migrations completed successfully',
+      message: 'Database schema created successfully',
       userCount 
     })
     
   } catch (error) {
-    console.error('Migration failed:', error)
+    console.error('Database setup failed:', error)
     
     return NextResponse.json(
       { 
         success: false, 
-        message: 'Migration failed', 
+        message: 'Database setup failed', 
         error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
