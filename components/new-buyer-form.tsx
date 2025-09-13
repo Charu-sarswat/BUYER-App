@@ -71,14 +71,6 @@ export function NewBuyerForm() {
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-2">
-          Add New Buyer
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Create a new buyer lead with detailed information
-        </p>
-      </div>
       
       <Card className="animate-slide-up">
         <CardHeader>
