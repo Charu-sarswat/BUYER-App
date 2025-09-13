@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+interface DiagnosticCheck {
+  name: string
+  status: 'pass' | 'fail' | 'checking'
+  details: any
+}
+
 export async function GET(request: NextRequest) {
   const diagnostics = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    checks: []
+    checks: [] as DiagnosticCheck[]
   }
 
   // Check 1: Environment Variables
@@ -146,14 +152,14 @@ export async function GET(request: NextRequest) {
   })
 
   // Overall Status
-  const failedChecks = diagnostics.checks.filter(check => check.status === 'fail')
+  const failedChecks = diagnostics.checks.filter((check: DiagnosticCheck) => check.status === 'fail')
   const overallStatus = failedChecks.length === 0 ? 'healthy' : 'issues'
 
   return NextResponse.json({
     status: overallStatus,
     summary: {
       total: diagnostics.checks.length,
-      passed: diagnostics.checks.filter(c => c.status === 'pass').length,
+      passed: diagnostics.checks.filter((c: DiagnosticCheck) => c.status === 'pass').length,
       failed: failedChecks.length
     },
     ...diagnostics
