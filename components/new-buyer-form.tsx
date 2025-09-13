@@ -255,7 +255,7 @@ export function NewBuyerForm() {
                 <SelectContent>
                   <SelectItem value="0-3m">0-3 months</SelectItem>
                   <SelectItem value="3-6m">3-6 months</SelectItem>
-                  <SelectItem value=">6m">>6 months</SelectItem>
+                  <SelectItem value=">6m">{'>'}6 months</SelectItem>
                   <SelectItem value="Exploring">Exploring</SelectItem>
                 </SelectContent>
               </Select>
