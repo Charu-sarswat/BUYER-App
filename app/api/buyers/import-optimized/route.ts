@@ -7,7 +7,7 @@ import { getClientIdentifier, withRateLimit, importRateLimiter } from '@/lib/rat
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Import API called')
+    console.log('Optimized Import API called')
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       console.log('Unauthorized access to import API')
@@ -74,19 +74,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Optimized bulk import for up to 200 rows
-    const buyersData = parseResult.data!.map(buyerData => ({
+    // Prepare data for bulk insert
+    const buyersData = parseResult.data.map(buyerData => ({
       ...buyerData,
       ownerId: session.user.id,
     }))
 
-    // Use createMany for maximum performance
-    const createResult = await prisma.buyer.createMany({
+    // Use createMany for better performance
+    const result = await prisma.buyer.createMany({
       data: buyersData,
       skipDuplicates: true, // Skip duplicates if any
     })
 
-    // Get the created buyers for response (only if we need to return them)
+    // Get the created buyers for response
     const createdBuyers = await prisma.buyer.findMany({
       where: {
         ownerId: session.user.id,
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
       orderBy: {
         createdAt: 'desc'
       },
-      take: createResult.count
+      take: result.count
     })
 
     return NextResponse.json({
       message: 'Import successful',
-      imported: createResult.count,
+      imported: result.count,
       buyers: createdBuyers
     })
   } catch (error) {

@@ -157,7 +157,8 @@ export function BuyersList() {
       formData.append('file', file)
 
       try {
-        const response = await fetch('/api/buyers/import', {
+        // Use the optimized bulk import endpoint for better performance
+        const response = await fetch('/api/buyers/import-bulk', {
           method: 'POST',
           body: formData,
         })
@@ -166,6 +167,9 @@ export function BuyersList() {
           const error = await response.json()
           throw new Error(error.error || 'Import failed')
         }
+
+        const result = await response.json()
+        console.log('Import result:', result)
 
         // Refresh the list
         fetchBuyers()

@@ -7,7 +7,7 @@ import { getClientIdentifier, withRateLimit, importRateLimiter } from '@/lib/rat
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Import API called')
+    console.log('Bulk Import API called')
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       console.log('Unauthorized access to import API')
@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      return NextResponse.json({ error: 'File too large' }, { status: 400 })
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit for bulk import
+      return NextResponse.json({ error: 'File too large. Maximum 10MB allowed.' }, { status: 400 })
     }
 
     const csvContent = await file.text()
@@ -74,46 +74,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Optimized bulk import for up to 200 rows
-    const buyersData = parseResult.data!.map(buyerData => ({
+    // Prepare data for bulk insert
+    const buyersData = parseResult.data.map(buyerData => ({
       ...buyerData,
       ownerId: session.user.id,
     }))
 
-    // Use createMany for maximum performance
+    console.log(`Starting bulk import of ${buyersData.length} buyers...`)
+    const startTime = Date.now()
+
+    // Use createMany for maximum performance - this is the fastest way
     const createResult = await prisma.buyer.createMany({
       data: buyersData,
       skipDuplicates: true, // Skip duplicates if any
     })
 
-    // Get the created buyers for response (only if we need to return them)
-    const createdBuyers = await prisma.buyer.findMany({
-      where: {
-        ownerId: session.user.id,
-        fullName: {
-          in: buyersData.map(b => b.fullName)
-        }
-      },
-      include: {
-        owner: {
-          select: { id: true, name: true, email: true }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: createResult.count
-    })
+    const endTime = Date.now()
+    const duration = endTime - startTime
 
+    console.log(`Bulk import completed in ${duration}ms. Created ${createResult.count} buyers.`)
+
+    // Return minimal response for better performance
     return NextResponse.json({
-      message: 'Import successful',
+      message: 'Bulk import successful',
       imported: createResult.count,
-      buyers: createdBuyers
+      totalRows: parseResult.data.length,
+      skipped: parseResult.data.length - createResult.count,
+      duration: `${duration}ms`,
+      performance: {
+        rowsPerSecond: Math.round((createResult.count / duration) * 1000)
+      }
     })
   } catch (error) {
-    console.error('Error importing buyers:', error)
+    console.error('Error in bulk import:', error)
     return NextResponse.json(
-      { error: 'Failed to import buyers' },
+      { 
+        error: 'Failed to import buyers',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
