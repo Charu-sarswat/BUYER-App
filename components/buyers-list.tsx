@@ -335,107 +335,138 @@ export function BuyersList() {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>City</TableHead>
-                  <TableHead>Property</TableHead>
-                  <TableHead>Purpose</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>Timeline</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {buyers.map((buyer) => (
-                  <TableRow key={buyer.id}>
-                    <TableCell className="font-medium">
-                      {buyer.fullName}
-                    </TableCell>
-                    <TableCell>{buyer.email}</TableCell>
-                    <TableCell>{buyer.phone || '-'}</TableCell>
-                    <TableCell>{buyer.city}</TableCell>
-                    <TableCell>
-                      {formatPropertyType(buyer.propertyType)}
-                      {buyer.bhk && ` (${buyer.bhk} BHK)`}
-                    </TableCell>
-                    <TableCell>{formatPurpose(buyer.purpose)}</TableCell>
-                    <TableCell>
-                      {buyer.budgetMin && buyer.budgetMax
-                        ? `${formatCurrency(buyer.budgetMin)} - ${formatCurrency(buyer.budgetMax)}`
-                        : buyer.budgetMin
-                        ? `Min: ${formatCurrency(buyer.budgetMin)}`
-                        : buyer.budgetMax
-                        ? `Max: ${formatCurrency(buyer.budgetMax)}`
-                        : '-'}
-                    </TableCell>
-                    <TableCell>{formatTimeline(buyer.timeline)}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
-                        buyer.status === 'New' ? 'status-new' :
-                        buyer.status === 'Contacted' ? 'status-contacted' :
-                        buyer.status === 'Qualified' ? 'status-qualified' :
-                        buyer.status === 'Visited' ? 'status-visited' :
-                        buyer.status === 'Negotiation' ? 'status-negotiation' :
-                        buyer.status === 'Converted' ? 'status-converted' :
-                        buyer.status === 'Dropped' ? 'status-dropped' :
-                        'bg-gray-50 text-gray-700 border-gray-200'
-                      }`}>
-                        {formatStatus(buyer.status)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(buyer.updatedAt)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push(`/buyers/${buyer.id}`)}
-                        className="hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-                      >
-                        View Details
-                      </Button>
-                    </TableCell>
+            <div className="overflow-hidden rounded-lg border shadow-professional">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-muted/50 to-muted/30">
+                    <TableHead className="font-semibold text-foreground">Name</TableHead>
+                    <TableHead className="font-semibold text-foreground">Email</TableHead>
+                    <TableHead className="font-semibold text-foreground">Phone</TableHead>
+                    <TableHead className="font-semibold text-foreground">City</TableHead>
+                    <TableHead className="font-semibold text-foreground">Property</TableHead>
+                    <TableHead className="font-semibold text-foreground">Purpose</TableHead>
+                    <TableHead className="font-semibold text-foreground">Budget</TableHead>
+                    <TableHead className="font-semibold text-foreground">Timeline</TableHead>
+                    <TableHead className="font-semibold text-foreground">Status</TableHead>
+                    <TableHead className="font-semibold text-foreground">Updated</TableHead>
+                    <TableHead className="font-semibold text-foreground">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {buyers.map((buyer, index) => (
+                    <TableRow key={buyer.id}>
+                      <TableCell className="font-semibold text-foreground">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center">
+                            <span className="text-primary font-bold text-xs">
+                              {buyer.fullName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          {buyer.fullName}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-foreground font-medium">{buyer.email}</TableCell>
+                      <TableCell className="text-foreground font-medium">{buyer.phone || '-'}</TableCell>
+                      <TableCell className="text-foreground font-medium">{buyer.city}</TableCell>
+                      <TableCell className="text-foreground font-medium">
+                        <div className="flex flex-col">
+                          <span>{formatPropertyType(buyer.propertyType)}</span>
+                          {buyer.bhk && <span className="text-xs text-muted-foreground">({buyer.bhk} BHK)</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-foreground font-medium">{formatPurpose(buyer.purpose)}</TableCell>
+                      <TableCell className="text-foreground font-medium">
+                        <div className="flex flex-col">
+                          {buyer.budgetMin && buyer.budgetMax
+                            ? <span>{formatCurrency(buyer.budgetMin)} - {formatCurrency(buyer.budgetMax)}</span>
+                            : buyer.budgetMin
+                            ? <span>Min: {formatCurrency(buyer.budgetMin)}</span>
+                            : buyer.budgetMax
+                            ? <span>Max: {formatCurrency(buyer.budgetMax)}</span>
+                            : <span className="text-muted-foreground">-</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-foreground font-medium">{formatTimeline(buyer.timeline)}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${
+                          buyer.status === 'New' ? 'status-new' :
+                          buyer.status === 'Contacted' ? 'status-contacted' :
+                          buyer.status === 'Qualified' ? 'status-qualified' :
+                          buyer.status === 'Visited' ? 'status-visited' :
+                          buyer.status === 'Negotiation' ? 'status-negotiation' :
+                          buyer.status === 'Converted' ? 'status-converted' :
+                          buyer.status === 'Dropped' ? 'status-dropped' :
+                          'bg-gray-50 text-gray-700 border-gray-200'
+                        }`}>
+                          {formatStatus(buyer.status)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground font-medium">
+                        {formatDate(buyer.updatedAt)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => router.push(`/buyers/${buyer.id}`)}
+                          className="bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105 transition-all duration-200"
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-            {pagination.total} results
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(page - 1)}
-              disabled={!pagination.hasPrev}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(page + 1)}
-              disabled={!pagination.hasNext}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <Card className="animate-slide-up">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+                  <span className="text-primary font-bold text-sm">📄</span>
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Showing <span className="font-semibold text-foreground">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
+                  <span className="font-semibold text-foreground">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
+                  <span className="font-semibold text-foreground">{pagination.total}</span> results
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={!pagination.hasPrev}
+                  className="hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Page</span>
+                  <span className="px-3 py-1 bg-primary/10 text-primary font-semibold rounded-lg">
+                    {pagination.page}
+                  </span>
+                  <span className="text-sm text-muted-foreground">of {pagination.totalPages}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={!pagination.hasNext}
+                  className="hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
